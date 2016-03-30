@@ -3,9 +3,11 @@ package co.moonmonkeylabs.realmsearchview;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.os.Handler;
+import android.support.annotation.NonNull;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.AttributeSet;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -18,9 +20,9 @@ import co.moonmonkeylabs.realmrecyclerview.RealmRecyclerView;
 public class RealmSearchView extends LinearLayout {
 
     private RealmRecyclerView realmRecyclerView;
-    private ClearableEditText searchBar;
+    private SearchBehavior searchBehavior;
     private RealmSearchAdapter adapter;
-
+    private Handler handler = null;
     private boolean addFooterOnIdle;
 
     public RealmSearchView(Context context) {
@@ -38,16 +40,36 @@ public class RealmSearchView extends LinearLayout {
         init(context, attrs);
     }
 
-    private void init(Context context, AttributeSet attrs) {
+    public EditText getEditTextView() {
+        return (EditText)findViewById(R.id.search_bar);
+    }
+
+    protected void inflateView(Context context) {
         inflate(context, R.layout.realm_search_view, this);
+    }
+
+    public RealmSearchAdapter getAdapter() {
+        return adapter;
+    }
+
+    private void init(Context context, AttributeSet attrs) {
+        inflateView(context);
         setOrientation(VERTICAL);
 
-        realmRecyclerView = (RealmRecyclerView) findViewById(R.id.realm_recycler_view);
-        searchBar = (ClearableEditText) findViewById(R.id.search_bar);
+        EditText editTextView = getEditTextView();
+        this.realmRecyclerView = (RealmRecyclerView) findViewById(R.id.realm_recycler_view);
+        this.searchBehavior = createSearchBehavior(editTextView);
 
         initAttrs(context, attrs);
+        addListeners(editTextView);
+    }
 
-        searchBar.addTextChangedListener(
+    protected ClearableEditTextBehavior createSearchBehavior(EditText editTextView) {
+        return new ClearableEditTextBehavior(editTextView);
+    }
+
+    protected void addListeners(EditText editTextView) {
+        editTextView.addTextChangedListener(
                 new TextWatcher() {
                     @Override
                     public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -66,8 +88,6 @@ public class RealmSearchView extends LinearLayout {
         );
     }
 
-    private Handler handler = null;
-
     private void addFooterHandler(final String search) {
         if (!addFooterOnIdle) {
             return;
@@ -82,7 +102,7 @@ public class RealmSearchView extends LinearLayout {
                 new Runnable() {
                     @Override
                     public void run() {
-                        if (search.equals(searchBar.getText().toString())) {
+                        if (search.equals(getEditTextView().getText().toString())) {
                             adapter.addFooter();
                         }
                         handler = null;
@@ -91,19 +111,19 @@ public class RealmSearchView extends LinearLayout {
                 300);
     }
 
-    private void initAttrs(Context context, AttributeSet attrs) {
+    protected void initAttrs(Context context, AttributeSet attrs) {
         TypedArray typedArray =
                 context.obtainStyledAttributes(attrs, R.styleable.RealmSearchView);
 
         int hintTextResId = typedArray.getResourceId(
                 R.styleable.RealmSearchView_rsvHint,
                 R.string.rsv_default_search_hint);
-        searchBar.setHint(hintTextResId);
+        getEditTextView().setHint(hintTextResId);
 
         int clearDrawableResId =
                 typedArray.getResourceId(R.styleable.RealmSearchView_rsvClearDrawable, -1);
         if (clearDrawableResId != -1) {
-            searchBar.setClearDrawable(getResources().getDrawable(clearDrawableResId));
+            searchBehavior.setClearDrawable(getResources().getDrawable(clearDrawableResId));
         }
 
         addFooterOnIdle = typedArray.getBoolean(R.styleable.RealmSearchView_rsvAddFooter, false);
@@ -117,19 +137,20 @@ public class RealmSearchView extends LinearLayout {
         this.adapter.filter("");
     }
 
-    public String getSearchBarText() {
-        return searchBar.getText().toString();
-    }
+//    public String getSearchBarText() {
+//        return getEditTextView().getText().toString();
+//    }
 
     public void addSearchBarTextChangedListener(TextWatcher watcher) {
-        searchBar.addTextChangedListener(watcher);
+        getEditTextView().addTextChangedListener(watcher);
     }
 
     public void removeSearchBarTextChangedListener(TextWatcher watcher) {
-        searchBar.removeTextChangedListener(watcher);
+        getEditTextView().removeTextChangedListener(watcher);
     }
 
     public void setOnEditorActionListener(TextView.OnEditorActionListener onEditorActionListener) {
-        searchBar.setOnEditorActionListener(onEditorActionListener);
+        getEditTextView().setOnEditorActionListener(onEditorActionListener);
     }
+
 }

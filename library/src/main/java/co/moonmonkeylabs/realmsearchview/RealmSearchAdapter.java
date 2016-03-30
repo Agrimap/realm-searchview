@@ -2,7 +2,6 @@ package co.moonmonkeylabs.realmsearchview;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
-import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.TextView;
@@ -13,10 +12,16 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import co.moonmonkeylabs.realmsearchview.multiselect.RealmFilter;
+import co.moonmonkeylabs.realmsearchview.search.SearchCriteria;
+import co.moonmonkeylabs.realmsearchview.search.SearchFilter;
+import co.moonmonkeylabs.realmsearchview.search.SearchOrderBy;
 import io.realm.Case;
 import io.realm.Realm;
 import io.realm.RealmBasedRecyclerViewAdapter;
@@ -31,25 +36,29 @@ import io.realm.Sort;
 public abstract class RealmSearchAdapter<T extends RealmObject, VH extends RealmSearchViewHolder>
         extends RealmBasedRecyclerViewAdapter<T, VH> {
 
-    private Realm realm;
-    protected Class<T> clazz;
+    private SearchFilter searchFilter;
 
-    private String filterKey;
+    public RealmSearchAdapter(
+            @NonNull Context context,
+            @NonNull Realm realm,
+            @NonNull SearchFilter<T> searchFilter) {
+        super(context, null, false, false);
 
-    private boolean useContains;
-    private Case casing;
-    private Sort sortOrder;
-    private String sortKey;
-    private String basePredicate;
+        this.searchFilter = searchFilter;
+    }
 
-    /**
-     * Creates a {@link RealmSearchAdapter} with only the filter columnKey. The defaults are:
-     * - useContains: true
-     * - casing: insensitive
-     * - sortOrder: ascending
-     * - sortKey: filterKey
-     * - basePredicate: not set
-     */
+    public RealmSearchAdapter(
+            @NonNull Context context,
+            @NonNull RealmResults<T> realmResults,
+            @NonNull Collection<SearchCriteria> orFields,
+            @NonNull Collection<SearchOrderBy> orderBys,
+            @NonNull String defaultSearchInput,
+            @NonNull boolean autoRefresh) {
+        super(context, null, false, false);
+
+        this.searchFilter = new SearchFilter<T>(realmResults, orFields, orderBys, defaultSearchInput);
+    }
+
     public RealmSearchAdapter(
             @NonNull Context context,
             @NonNull Realm realm,
@@ -57,10 +66,6 @@ public abstract class RealmSearchAdapter<T extends RealmObject, VH extends Realm
         this(context, realm, filterKey, true, Case.INSENSITIVE, Sort.ASCENDING, filterKey, null);
     }
 
-    /**
-     * Creates a {@link RealmSearchAdapter} with parameters for all options.
-     */
-    @SuppressWarnings("unchecked")
     public RealmSearchAdapter(
             @NonNull Context context,
             @NonNull Realm realm,
@@ -69,17 +74,23 @@ public abstract class RealmSearchAdapter<T extends RealmObject, VH extends Realm
             Case casing,
             Sort sortOrder,
             String sortKey,
-            String basePredicate) {
+            String defaultSearchInput) {
         super(context, null, false, false);
-        this.realm = realm;
-        this.filterKey = filterKey;
-        this.useContains = useContains;
-        this.casing = casing;
-        this.sortOrder = sortOrder;
-        this.sortKey = sortKey;
-        this.basePredicate = basePredicate;
 
-        clazz = (Class<T>) getTypeArguments(RealmSearchAdapter.class, getClass()).get(0);
+        Class<T> realmClass = RealmSearchAdapter.getRealmClass(getClass());
+
+        this.searchFilter = new SearchFilter<T>(realm, realmClass,
+                Arrays.asList(new SearchCriteria(filterKey, useContains, casing)),
+                Arrays.asList(new SearchOrderBy(sortKey, sortOrder)), defaultSearchInput);
+    }
+
+    public abstract void bindToViewHolder(VH viewHolder, T user);
+
+    @Override
+    public void onBindRealmViewHolder(VH viewHolder, int position) {
+        T selected = realmResults.get(position);
+
+        bindToViewHolder(viewHolder, selected);
     }
 
     @Override
@@ -90,81 +101,17 @@ public abstract class RealmSearchAdapter<T extends RealmObject, VH extends Realm
     @Override
     @SuppressWarnings("unchecked")
     public VH onCreateFooterViewHolder(ViewGroup viewGroup) {
-        View v = inflater.inflate(R.layout.footer_view, viewGroup, false);
-        RealmSearchViewHolder vh = new RealmSearchViewHolder(
-                (FrameLayout) v,
-                (TextView) v.findViewById(R.id.footer_text_view));
+        FrameLayout v = (FrameLayout) inflater.inflate(R.layout.footer_view, viewGroup, false);
+        TextView footer = (TextView) v.findViewById(R.id.footer_text_view);
+        RealmSearchViewHolder vh = new RealmSearchViewHolder(v, footer);
+
         return (VH) vh;
     }
 
     public void filter(String input) {
-        RealmResults<T> businesses;
-        RealmQuery<T> where = realm.where(clazz);
-        if (input.isEmpty() && basePredicate != null) {
-            if (useContains) {
-                where = where.contains(filterKey, basePredicate, casing);
-            } else {
-                where = where.beginsWith(filterKey, basePredicate, casing);
-            }
-        } else if (!input.isEmpty()) {
-            if (useContains) {
-                where = where.contains(filterKey, input, casing);
-            } else {
-                where = where.beginsWith(filterKey, input, casing);
-            }
-        }
+        RealmResults results = this.searchFilter.filter(input);
 
-        if (sortKey == null) {
-            businesses = where.findAll();
-        } else {
-            businesses = where.findAllSorted(sortKey, sortOrder);
-        }
-        updateRealmResults(businesses);
-    }
-
-    /**
-     * The columnKey by which the results are filtered.
-     */
-    public void setFilterKey(String filterKey) {
-        if (filterKey == null) {
-            throw new IllegalStateException("The filterKey cannot be null.");
-        }
-        this.filterKey = filterKey;
-    }
-
-    /**
-     * If true, {@link RealmQuery#contains} is used else {@link RealmQuery#beginsWith}.
-     */
-    public void setUseContains(boolean useContains) {
-        this.useContains = useContains;
-    }
-
-    /**
-     * Sets if the filtering is case sensitive or case insensitive.
-     */
-    public void setCasing(Case casing) {
-        this.casing = casing;
-    }
-
-    /**
-     * Sets if the sort order is ascending or descending.
-     */
-    public void setSortOrder(Sort sortOrder) {
-        this.sortOrder = sortOrder;
-    }
-
-    /**
-     * Sets the sort columnKey.
-     */
-    public void setSortKey(String sortKey) {
-        this.sortKey = sortKey;
-    }
-
-    /**
-     * Sets the basePredicate which is used filters the results when the search query is empty.
-     */
-    public void setBasePredicate(String basePredicate) {
-        this.basePredicate = basePredicate;
+        updateRealmResults(results);
     }
 
     //
@@ -249,6 +196,10 @@ public abstract class RealmSearchAdapter<T extends RealmObject, VH extends Realm
             typeArgumentsAsClasses.add(getClass(baseType));
         }
         return typeArgumentsAsClasses;
+    }
+
+    private static <T extends RealmObject> Class<T> getRealmClass(Class<? extends RealmSearchAdapter> clazz) {
+        return (Class<T>) getTypeArguments(RealmSearchAdapter.class, clazz).get(0);
     }
     //
     // End StackOverflow code
