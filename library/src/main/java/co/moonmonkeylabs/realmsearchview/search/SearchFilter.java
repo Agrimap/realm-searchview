@@ -1,20 +1,17 @@
 package co.moonmonkeylabs.realmsearchview.search;
 
 import android.support.annotation.NonNull;
-import android.widget.Filter;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 
 import io.realm.Realm;
-import io.realm.RealmObject;
+import io.realm.RealmModel;
 import io.realm.RealmQuery;
-import io.realm.RealmResults;
 import io.realm.RealmResults;
 import io.realm.Sort;
 
-public class SearchFilter<T extends RealmObject> {
+public class SearchFilter<T extends RealmModel> {
 
     private RealmResults<T> realmResults;
     private Realm realm;

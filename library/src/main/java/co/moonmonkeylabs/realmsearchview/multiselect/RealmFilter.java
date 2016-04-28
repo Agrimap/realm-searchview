@@ -4,10 +4,10 @@ import android.support.annotation.NonNull;
 import android.widget.Filter;
 
 import co.moonmonkeylabs.realmsearchview.search.SearchFilter;
-import io.realm.RealmObject;
+import io.realm.RealmModel;
 import io.realm.RealmResults;
 
-public abstract class RealmFilter<T extends RealmObject> extends Filter {
+public abstract class RealmFilter<T extends RealmModel> extends Filter {
 
     private SearchFilter searchFilter;
     private boolean filterInUIThread;

@@ -11,21 +11,27 @@ import android.widget.TextView;
 
 import com.tokenautocomplete.TokenCompleteTextView;
 
-import co.moonmonkeylabs.realmsearchview.R;
-import io.realm.RealmObject;
+import java.io.Serializable;
+import java.util.ArrayList;
 
-public abstract class RealmMultiSelectView<T extends RealmObject> extends TokenCompleteTextView<T> {
+import co.moonmonkeylabs.realmsearchview.R;
+import io.realm.RealmModel;
+
+public abstract class RealmMultiSelectView<T extends RealmModel> extends TokenCompleteTextView<T> {
 
     public RealmMultiSelectView(Context context) {
         super(context);
+        setDeletionStyle(TokenCompleteTextView.TokenDeleteStyle.Clear);
     }
 
     public RealmMultiSelectView(Context context, AttributeSet attrs) {
         super(context, attrs);
+        setDeletionStyle(TokenCompleteTextView.TokenDeleteStyle.Clear);
     }
 
     public RealmMultiSelectView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
+        setDeletionStyle(TokenCompleteTextView.TokenDeleteStyle.Clear);
     }
 
     @Override
@@ -38,6 +44,12 @@ public abstract class RealmMultiSelectView<T extends RealmObject> extends TokenC
 
         return view;
     }
+
+    @Override
+    abstract protected ArrayList<T> convertSerializableArrayToObjectArray(ArrayList<Serializable> s);
+
+    @Override
+    abstract protected ArrayList<Serializable> getSerializableObjects();
 
     protected abstract String getTokenText(T object);
 

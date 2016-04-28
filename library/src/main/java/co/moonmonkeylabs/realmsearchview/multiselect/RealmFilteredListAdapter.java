@@ -14,6 +14,7 @@ import co.moonmonkeylabs.realmsearchview.search.SearchCriteria;
 import co.moonmonkeylabs.realmsearchview.search.SearchFilter;
 import co.moonmonkeylabs.realmsearchview.search.SearchOrderBy;
 import io.realm.RealmBaseAdapter;
+import io.realm.RealmModel;
 import io.realm.RealmObject;
 import io.realm.RealmQuery;
 import io.realm.RealmResults;
@@ -24,7 +25,7 @@ import io.realm.RealmResults;
  *
  * TODO: implement ViewHolder pattern instead of populateView()
  */
-public abstract class RealmFilteredListAdapter<T extends RealmObject/*, VH extends RealmViewHolder*/>
+public abstract class RealmFilteredListAdapter<T extends RealmModel/*, VH extends RealmViewHolder*/>
         extends RealmBaseAdapter<T> implements Filterable {
 
     private RealmResults<T> realmResults;
@@ -39,7 +40,17 @@ public abstract class RealmFilteredListAdapter<T extends RealmObject/*, VH exten
         this.realmFilter = new RealmFilter<T>(searchFilter, true) {
             @Override
             public void updateRealmResults(RealmResults<T> filteredResults) {
-                RealmFilteredListAdapter.this.updateRealmResults(filteredResults);
+                RealmFilteredListAdapter.this.updateData(filteredResults);
+            }
+
+            @Override
+            public CharSequence convertResultToString(Object resultValue) {
+                CharSequence charSequence = RealmFilteredListAdapter.this.convertResultToString((T)resultValue);
+                if (charSequence != null) {
+                    return charSequence;
+                }
+
+                return super.convertResultToString(resultValue);
             }
         };
     }
@@ -59,6 +70,8 @@ public abstract class RealmFilteredListAdapter<T extends RealmObject/*, VH exten
     }
 
     protected abstract View populateView(T object, View view, ViewGroup parent);
+
+    public abstract CharSequence convertResultToString(T resultValue);
 
 //    public abstract VH onCreateRealmViewHolder(ViewGroup var1, int var2);
 //
