@@ -26,6 +26,8 @@ android {
 }
 
 dependencies {
-    compile 'com.github.thorbenprimke:realm-recyclerview:0.9.+'
-    compile "com.splitwise:tokenautocomplete:2.0.5@aar"
+    compile project(':realm-recyclerview:library')
+//    compile 'com.github.thorbenprimke:realm-recyclerview:0.9.+'
+    compile 'io.realm:android-adapters:1.0.1'
+    compile "com.splitwise:tokenautocomplete:2.0.7@aar"
 }

@@ -7,16 +7,9 @@ import android.view.ViewGroup;
 import android.widget.Filter;
 import android.widget.Filterable;
 
-import java.util.Arrays;
-import java.util.Collection;
-
-import co.moonmonkeylabs.realmsearchview.search.SearchCriteria;
 import co.moonmonkeylabs.realmsearchview.search.SearchFilter;
-import co.moonmonkeylabs.realmsearchview.search.SearchOrderBy;
 import io.realm.RealmBaseAdapter;
 import io.realm.RealmModel;
-import io.realm.RealmObject;
-import io.realm.RealmQuery;
 import io.realm.RealmResults;
 
 /**
@@ -33,9 +26,8 @@ public abstract class RealmFilteredListAdapter<T extends RealmModel/*, VH extend
 
     public RealmFilteredListAdapter(
             @NonNull Context context,
-            @NonNull SearchFilter<T> searchFilter,
-            @NonNull boolean autoRefresh) {
-        super(context, null, autoRefresh);
+            @NonNull SearchFilter<T> searchFilter) {
+        super(context, null);
 
         this.realmFilter = new RealmFilter<T>(searchFilter, true) {
             @Override
