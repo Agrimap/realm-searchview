@@ -18,10 +18,9 @@ import io.realm.RealmResults;
  *
  * TODO: implement ViewHolder pattern instead of populateView()
  */
-public abstract class RealmFilteredListAdapter<T extends RealmModel/*, VH extends RealmViewHolder*/>
+public abstract class RealmFilteredListAdapter<T extends RealmModel/*, VH extends RealmViewHolder */>
         extends RealmBaseAdapter<T> implements Filterable {
 
-    private RealmResults<T> realmResults;
     private RealmFilter<T> realmFilter;
 
     public RealmFilteredListAdapter(
@@ -37,9 +36,11 @@ public abstract class RealmFilteredListAdapter<T extends RealmModel/*, VH extend
 
             @Override
             public CharSequence convertResultToString(Object resultValue) {
-                CharSequence charSequence = RealmFilteredListAdapter.this.convertResultToString((T)resultValue);
-                if (charSequence != null) {
-                    return charSequence;
+                if (resultValue != null) {
+                    CharSequence charSequence = RealmFilteredListAdapter.this.convertResultToString((T) resultValue);
+                    if (charSequence != null) {
+                        return charSequence;
+                    }
                 }
 
                 return super.convertResultToString(resultValue);

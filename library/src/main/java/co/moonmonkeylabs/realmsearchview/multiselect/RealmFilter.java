@@ -32,11 +32,13 @@ public abstract class RealmFilter<T extends RealmModel> extends Filter {
 
     @Override
     protected void publishResults(CharSequence constraint, FilterResults filteredResults) {
-        if (filterInUIThread) {
-            filter(filteredResults, constraint == null ? null : constraint.toString());
-        }
+        if (searchFilter.canFilter()) {
+            if (filterInUIThread) {
+                filter(filteredResults, constraint == null ? null : constraint.toString());
+            }
 
-        updateRealmResults((RealmResults<T>) filteredResults.values);
+            updateRealmResults((RealmResults<T>) filteredResults.values);
+        }
     }
 
     private RealmResults<T> filter(FilterResults filterResults, String input) {

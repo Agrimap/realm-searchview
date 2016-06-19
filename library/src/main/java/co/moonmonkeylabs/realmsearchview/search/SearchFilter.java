@@ -79,9 +79,19 @@ public class SearchFilter<T extends RealmModel> {
     @NonNull
     public RealmQuery<T> getWhere() {
         if (realmResults != null) {
-            return realmResults.where();
+            if (realmResults.isValid())
+                return realmResults.where();
         }
         return realm.where(realmClass);
+    }
+
+    @NonNull
+    public boolean canFilter() {
+        if (realmResults != null) {
+            return realmResults.isValid();
+        }
+
+        return !realm.isClosed();
     }
 
     private String[] getSortKeys() {
