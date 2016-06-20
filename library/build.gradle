@@ -25,6 +25,15 @@ android {
     }
 }
 
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'io.realm:realm-gradle-plugin:1.0.0'
+    }
+}
+
 dependencies {
     compile project(':realm-recyclerview:library')
 //    compile 'com.github.thorbenprimke:realm-recyclerview:0.9.+'
