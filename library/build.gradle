@@ -1,11 +1,23 @@
 apply plugin: 'com.android.library'
+apply plugin: 'com.github.dcendents.android-maven'
 apply plugin: 'realm-android'
 
 repositories {
+    mavenLocal()
     jcenter()
     maven { url "https://jitpack.io" }
 }
 
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:2.1.2'
+        classpath 'com.github.dcendents:android-maven-gradle-plugin:1.4'
+        classpath 'io.realm:realm-gradle-plugin:1.0.1'
+    }
+}
 
 android {
     compileSdkVersion 23
@@ -25,18 +37,24 @@ android {
     }
 }
 
-buildscript {
-    repositories {
-        jcenter()
-    }
-    dependencies {
-        classpath 'io.realm:realm-gradle-plugin:1.0.0'
-    }
-}
-
 dependencies {
-    compile project(':realm-recyclerview:library')
-//    compile 'com.github.thorbenprimke:realm-recyclerview:0.9.+'
+    compile 'com.github.thorbenprimke:realm-recyclerview:0.9-agrimap'
     compile 'io.realm:android-adapters:1.2.1'
     compile "com.splitwise:tokenautocomplete:2.0.7@aar"
+}
+
+install {
+    repositories.mavenInstaller {
+        pom {
+            project {
+                packaging 'aar'
+                name 'realm-searchview'
+                // description ''
+                // url 'http://realm.io'
+                pom.groupId = 'com.github.thorbenprimke'
+                pom.artifactId = 'realm-searchview'
+                pom.version = '0.9-agrimap'
+            }
+        }
+    }
 }
