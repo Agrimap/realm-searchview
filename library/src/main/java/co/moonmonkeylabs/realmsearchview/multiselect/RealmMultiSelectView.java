@@ -16,6 +16,7 @@ import java.util.ArrayList;
 
 import co.moonmonkeylabs.realmsearchview.R;
 import io.realm.RealmModel;
+import io.realm.RealmObject;
 
 public abstract class RealmMultiSelectView<T extends RealmModel> extends TokenCompleteTextView<T> {
 
@@ -40,7 +41,9 @@ public abstract class RealmMultiSelectView<T extends RealmModel> extends TokenCo
         LinearLayout view = (LinearLayout)l.inflate(R.layout.token_default, (ViewGroup) RealmMultiSelectView.this.getParent(), false);
         TextView textView = (TextView) view.findViewById(R.id.token_value);
 
-        textView.setText(getTokenText(object));
+        if (RealmObject.isValid(object)) {
+            textView.setText(getTokenText(object));
+        }
 
         return view;
     }
